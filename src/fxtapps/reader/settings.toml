@@ -1,0 +1,18 @@
+# file_browser settings.
+# [defaults] is yours to edit. [location] (ctrl+s), [ui] (theme) and [bookmarks]
+# are rewritten by the app; the rest of this file, comments included, is left alone.
+
+[defaults]
+# Folder to open when none is given on the command line and no location is saved.
+# root = "~/datalake"
+
+# Parquet metadata keys to show, in this order. Exact names or globs ("fxt-data*").
+# A key matched by an earlier entry isn't shown twice.
+# meta_keys = ["fxt-data-schema", "fxt-data*"]
+
+[location]
+root = "/home/tony/cloud/.rclone-sync/code/python/.fxt/repo"
+file = "data/ingest/downloads/dukascopy/forex/AUDCAD/TICK/2013/01/AUDCAD-2013-01-01.parquet"
+
+[bookmarks]
+"/home/tony/cloud/.rclone-sync/code/python/.fxt/repo/data/ingest/downloads/dukascopy/forex/AUDCAD/TICK/2013/01/AUDCAD-2013-01-01.parquet" = "daily"
