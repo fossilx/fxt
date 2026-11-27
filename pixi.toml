@@ -11,6 +11,8 @@ default = { features = ["apps"], solve-group = "main" }
 lib = { features = [], solve-group = "main"} #doesn't have apps deps
 #this is so you can run pytest in the "lib" env and it will error out if it
 #detects you using one of the cli libs
+jupyter = { features = ["apps", "jupyter"], solve-group = "main"}
+
 
 [activation]
 #time zone support
@@ -43,6 +45,10 @@ dukascopy-python = ">=7.0.0, <8"
 getch = ">=1.0, <2"
 
 
+
+#======================================================================(70)
+# tasks
+#----------------------------------------------------------------------(70)
 [tasks]
 test       = "pytest -m 'not slow'"
 test-slow  = "pytest -m slow"
@@ -53,6 +59,18 @@ tests = [{ task = "test" }]
 
 # TODO add command to test specific project?
 migrate-downloads = "python scripts/migrate_downloads.py"   # one-off, see fxt.data.ingest.migrate
+
+[tasks.zip]
+cmd = "python scripts/zip/zip-dir.py . --out dist/fxt-repo.zip"
+
+[tasks.zip-pkg]
+args = ["pkg"]
+#cmd = "python scripts/zip/zip.py packages/{{ pkg }}/src/{{ pkg }}"
+cmd = "python scripts/zip/zip-dir.py src/{{ pkg }}"
+description = "Zip project pkg"
+
+# [tasks.reader]
+# cmd = "python -m fxtapps.reader.cli data"
 
 
 
@@ -74,23 +92,44 @@ example = "python -m fxtapps.example"
 ingest = "python -m fxtapps.ingest"
 derive = "python -m fxtapps.derive"
 lake-check = "python -m fxtapps.lakecheck"
+reader = "python -m fxtapps.reader.cli data"
+
 
 #======================================================================(70)
-# tasks
+# group: jupyter
 #----------------------------------------------------------------------(70)
-[tasks.zip]
-cmd = "python scripts/zip/zip-dir.py . --out dist/fxt-repo.zip"
+[feature.jupyter.dependencies]
+#traitlets = "*"
+jupyterlab = ">=4.6.6,<5"
+#pixi-kernel = ">=0.7.1,<0.8"
+nbformat = ">=5.11.1,<6"
+ipykernel = ">=7.4.0,<8"
+ipywidgets = ">=8.1.9,<9"
+altair = ">=6.3.0,<7"
+plotly = ">=7.1.0,<8"
+bokeh = ">=3.10.0,<4"
+pygal = ">=3.1.3,<4"
+jupyter_bokeh = ">=4.1.0,<5"
 
-[tasks.zip-pkg]
-args = ["pkg"]
-#cmd = "python scripts/zip/zip.py packages/{{ pkg }}/src/{{ pkg }}"
-cmd = "python scripts/zip/zip-dir.py src/{{ pkg }}"
-description = "Zip project pkg"
+[feature.jupyter.pypi-dependencies]
+jupyterlab-execute-time = ">=3.3.0, <4"
 
-[tasks.reader]
-cmd = "python -m fxtapps.reader.cli data"
+[feature.jupyter.tasks]
+lab = "python jupyter/.jupyter/launcher.py"
 
+# jupyterlab pixi-kernel nbformat ipykernel ipywidgets
 
+# jupyterlab = ">=4.6.4,<5"
+# pixi-kernel = ">=0.7.1,<0.8"
+# nbformat = ">=5.11.1,<6"
+# ipykernel = ">=7.3.0,<8"
+# ipywidgets = ">=8.1.9,<9"
+# #re: plotting
+# altair = ">=6.2.2,<7"
+# plotly = ">=7.1.0,<8"
+# bokeh = ">=3.10.0,<4"
+# pygal = ">=3.1.3,<4"
+# jupyter_bokeh = ">=4.1.0,<5"
 
 #! DEV
 #lint = "ruff check ."

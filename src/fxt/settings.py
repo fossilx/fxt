@@ -61,6 +61,9 @@ class Secrets(ENVSettings):
     #model_config = SettingsConfigDict(env_file="fxt.env")
     TELEGRAM_TOKEN: SecretStr
     TELEGRAM_USERID: int
+
+    #! jupyter-specific
+    JUPYTER_PASSWORD_HASH: SecretStr|None = None
 #
 
 @lru_cache

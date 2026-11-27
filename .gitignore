@@ -43,8 +43,13 @@ dist/
 
 #! RE: JUPYTER NOTEBOOKS + CONFIG
 ### we ignore .jupyter-conf.py cuz it may contain the password hash for server
-jupyter/
+#jupyter/
 #jupyter/.jupyter/jupyter_lab_config.py
+
+jupyter/.jupyter/lab/
+jupyter/.jupyter/serverconfig/
+
+
 
 #to version control notebooks, consider: jupytext (jupytext.org)
 *.ipynb
