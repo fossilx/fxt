@@ -61,3 +61,11 @@ jupyter/.jupyter/serverconfig/
 #jupyterlab-execute-time
 #jupyterlab-widgets-jupyterlab-manager
 #jupterlab-myst
+
+
+#! RE: RESEARCH RUNS (see fxt.research.paths)
+# datasets and run outputs stay local; the .db files are tracked for now
+runs/**/data/
+runs/**/artifacts/
+runs/**/*.db-wal
+runs/**/*.db-shm

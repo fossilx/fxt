@@ -1,6 +1,9 @@
 """
 [written primarily by claude]
 
+TODO: Revisit this later to determine if I need to upgrade/change/etc.
+TODO: Make it possible to execute fxtapps.reader via a __main__.py
+
 Two-column Textual file browser with a recursive filter and extension-based previews.
 
 Usage:  python cli.py [ROOT_DIR] [--meta-key fxt-data-schema --meta-key "fxt-data*" ...]

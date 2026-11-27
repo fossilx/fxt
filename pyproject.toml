@@ -14,7 +14,7 @@ packages = ["src/fxt", "src/fxtapps"]
 
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "projects"]
+testpaths = ["tests"]
 addopts = "--import-mode=importlib"
 markers = [
     "slow: walks the real lake / long-running",

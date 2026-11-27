@@ -93,6 +93,7 @@ ingest = "python -m fxtapps.ingest"
 derive = "python -m fxtapps.derive"
 lake-check = "python -m fxtapps.lakecheck"
 reader = "python -m fxtapps.reader.cli data"
+research = "python -m fxtapps.research"
 
 
 #======================================================================(70)
@@ -113,6 +114,7 @@ jupyter_bokeh = ">=4.1.0,<5"
 
 [feature.jupyter.pypi-dependencies]
 jupyterlab-execute-time = ">=3.3.0, <4"
+jupytext = ">=1.17, <2"   # notebooks are versioned as percent-format .py
 
 [feature.jupyter.tasks]
 lab = "python jupyter/.jupyter/launcher.py"

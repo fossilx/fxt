@@ -123,12 +123,14 @@ class PathSettings(BaseModel):
         ├── jupyter/
         │   > currently a placeholder should I wish to add jupyter later
         │
-        ├── runs/                       for each research proj
-        │   ├── p01_single_pair/
-        │   │       experiments.db
-        │   ├── p02_small_pool/
-        │   │       experiments.db
-        │   ╰── lockbox.db
+        ├── runs/                       research data, see fxt.research.paths
+        │   ├── <group>/                same slugs as fxtapps/research/<group>/...
+        │   │   ├── common/data/        group scope: lake/ (data/lake layout) + declared dirs
+        │   │   ╰── <project>/
+        │   │       ├── experiments.db
+        │   │       ├── data/           project scope: lake/ + declared dirs
+        │   │       ╰── artifacts/<run-id>/
+        │   ╰── lockbox.db              global, shared by all projects
         │
         ├── scripts/
         │
