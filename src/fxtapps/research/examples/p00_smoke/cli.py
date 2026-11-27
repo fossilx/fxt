@@ -29,7 +29,10 @@ def _scope(s) -> dict:
     return {
         "data": str(s.data),
         "lake": str(s.lake.root),
-        "declared": {name: str(s.dir(name)) for name in s.declared},
+        "declared": {
+            name: f"{s.dir(name)}" + (f"  [{'/'.join(d.key.partitions())}]" if d.key else "  [free-form]")
+            for name, d in s.declared.items()
+        },
     }
 
 

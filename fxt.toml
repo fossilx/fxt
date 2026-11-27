@@ -9,3 +9,8 @@ namespace="fxt-data"
 #root:Path = Field(default_factory=find_project_root)
 #i updated the PathSettings object -- see fxt/paths.py
 
+
+
+#! files with possible additions:
+#  fxt/data/schemas.py
+#  fxt/data/paths.py

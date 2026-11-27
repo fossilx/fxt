@@ -52,7 +52,7 @@ from fxt.core.io.hash_cache import HashCache
 from fxt.core.versioned import TYPE_KEY
 from fxt.data.jobs import JobContext, LogFn
 from fxt.data.models import BarsMeta, DerivedMeta, get_meta_io, get_store
-from fxt.data.paths import Lake, LakeType, PartitionKey
+from fxt.data.paths import Lake, LakeType, LakeKey
 
 from . import bar_checks as bc
 from .bars import RESAMPLE_BARS, TICK_INTERVAL, TICKS_TO_BARS, build_bars
@@ -106,8 +106,8 @@ class InputSpec:
     laketype: LakeType
     filters: dict[str, str] = field(default_factory=dict)
 
-    def scan(self, lake: Lake) -> list[tuple[PartitionKey, Path]]:
-        return lake.scan(self.laketype, **self.filters)
+    def scan(self, lake: Lake) -> list[tuple[LakeKey, Path]]:
+        return lake.layer(self.laketype).scan(**self.filters)
 #
 
 Build = Callable[[JobContext], None]
@@ -118,7 +118,7 @@ class DerivedJob:
     name: str                                         # "bars-1min"
     description: str
     inputs: InputSpec
-    out_path: Callable[[Lake, PartitionKey], Path]
+    out_path: Callable[[Lake, LakeKey], Path]
     build: Build
     expected: tuple[str, int]                         # transform (name, version) of a current output
     pre_checks: tuple[Check[JobContext], ...] = ()
@@ -130,14 +130,14 @@ class DerivedJob:
         flatten_checks([*self.pre_checks, *self.checks])     # ids unique across both stages
 
     #! ---- files ---------------------------------------------------------------
-    def scan(self, lake: Lake) -> list[tuple[PartitionKey, Path]]:
+    def scan(self, lake: Lake) -> list[tuple[LakeKey, Path]]:
         return self.inputs.scan(lake)
 
-    def dst(self, lake: Lake, key: PartitionKey) -> Path:
+    def dst(self, lake: Lake, key: LakeKey) -> Path:
         return self.out_path(lake, key)
 
     #! ---- up to date? ----------------------------------------------------------
-    def state(self, lake: Lake, key: PartitionKey, src: Path,
+    def state(self, lake: Lake, key: LakeKey, src: Path,
               hasher: HashCache | None = None, *, verify_inputs: bool = True) -> tuple[State, str]:
         """ (state, reason). Reads the output's footer; hashes inputs via the cache.
             verify_inputs=False skips the sha256 comparison (fast, but can't see
@@ -171,7 +171,7 @@ class DerivedJob:
             return State.FAILED, "checks failed: " + ", ".join(c.name for c in meta.failed_checks)
         return State.CURRENT, ""
 
-    def is_current(self, lake: Lake, key: PartitionKey, src: Path) -> bool:
+    def is_current(self, lake: Lake, key: LakeKey, src: Path) -> bool:
         return self.state(lake, key, src)[0] is State.CURRENT
 #
 
@@ -184,7 +184,7 @@ def _noop(*_a, **_k) -> None: ...
 def run_job(
     job: DerivedJob,
     lake: Lake,
-    key: PartitionKey,
+    key: LakeKey,
     src: Path,
     *,
     build: bool = True,
@@ -270,9 +270,9 @@ def time_bars(source_interval: str, interval: str, *,
     """ One job per step: TICK -> 1MIN (from raw), 1MIN -> 1HOUR (from derived), ... """
     from_ticks = source_interval == TICK_INTERVAL
 
-    def out_path(lake: Lake, key: PartitionKey) -> Path:
+    def out_path(lake: Lake, key: LakeKey) -> Path:
         out = key.replace(interval=interval)
-        return lake.derived(**out.model_dump(), filename=out.filename, must_exist=False)
+        return lake.derived.file(out)
 
     def build(ctx: JobContext) -> None:
         assert ctx.dst is not None
@@ -326,9 +326,26 @@ def job_for_interval(interval: str) -> DerivedJob | None:
     return next((j for j in JOBS.values() if j.out_interval == interval), None)
 
 
+def get_jobs() -> list[str]:
+    """ Returns a list of job ids.
+    """
+    return list(JOBS.keys())
+#
+
 def get_job(name: str) -> DerivedJob:
     try:
         return JOBS[name.lower()]
     except KeyError:
         raise KeyError(f"unknown job {name!r}; known: {', '.join(JOBS)}") from None
 #-
+
+
+#!================================================================================(80)
+#! gogogogog
+#!--------------------------------------------------------------------------------(80)
+if __name__ == "__main__":
+    from rich import print
+    from rich.panel import Panel
+    from rich.pretty import pprint
+
+    pprint(get_jobs())

@@ -70,7 +70,7 @@ from fxt.core.checks import (
 )
 from fxt.data.derived.jobs import DerivedJob, Outcome, State, run_job
 from fxt.data.jobs import JobContext, LogFn
-from fxt.data.paths import PARTITION_KEYS, Lake, PartitionKey
+from fxt.data.paths import Lake, LakeKey
 
 
 
@@ -130,13 +130,13 @@ def outcome_text(outcome: Outcome | None) -> Text:
 #!--------------------------------------------------------------------------------(80)
 @dataclass(frozen=True)
 class Entry:
-    key: PartitionKey
+    key: LakeKey
     path: Path
     tokens: tuple[str, ...]
 
     @classmethod
-    def make(cls, key: PartitionKey, path: Path) -> "Entry":
-        tokens = tuple(str(getattr(key, k)).lower() for k in PARTITION_KEYS)
+    def make(cls, key: LakeKey, path: Path) -> "Entry":
+        tokens = tuple(str(getattr(key, k)).lower() for k in LakeKey.partitions())
         return cls(key=key, path=path, tokens=tokens + (path.stem.lower(),))
 #
 
@@ -301,7 +301,7 @@ class LakePicker(App):
         self.sub_title = f"{self.laketype}  {f}".strip()
         t = self.query_one("#results", DataTable)
         t.add_column("●", key="mark", width=1)
-        for k in PARTITION_KEYS:
+        for k in LakeKey.partitions():
             t.add_column(k, key=k)
         t.add_column("file", key="file")
         t.add_column("state", key="done")
@@ -353,7 +353,7 @@ class LakePicker(App):
         table.clear()
         for e in self.results:
             row: list[str | Text] = [self._mark_text(e)]
-            row += [str(getattr(e.key, k)) for k in PARTITION_KEYS] + [e.path.name]
+            row += [str(getattr(e.key, k)) for k in LakeKey.partitions()] + [e.path.name]
             row.append(state_text(self._state(e)[0]))
             row.append(self._outcome_of(e))
             table.add_row(*row, key=str(e.path))

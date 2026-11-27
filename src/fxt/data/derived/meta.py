@@ -48,7 +48,7 @@ from fxt.data.models import (
     DATA_MODELS, BarsMeta, CheckedMeta, CheckRecord, DatasetKey, Transform,
     get_meta_io, get_store, input_ref,
 )
-from fxt.data.paths import PartitionKey
+from fxt.data.paths import LakeKey
 
 __all__ = [
     "BUILD_RESULT_KEY", "remember_build", "build_result", "year_period",
@@ -125,7 +125,7 @@ def bars_meta(
         so the meta can't disagree with where the file lives.
     """
     lake_root = Path(lake_root)
-    key = PartitionKey.from_path(result.dst.resolve().relative_to(lake_root.resolve()))
+    key = LakeKey.from_path(result.dst.resolve().relative_to(lake_root.resolve()))
     if key.interval != result.interval:
         raise ValueError(f"dst folder says interval={key.interval}, "
                          f"but the build made {result.interval} bars: {result.dst}")

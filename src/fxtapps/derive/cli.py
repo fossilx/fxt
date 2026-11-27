@@ -35,7 +35,7 @@ from rich.table import Table
 from rich.text import Text
 
 from fxt.data.derived.jobs import JOBS, DerivedJob, Outcome, State, get_job, run_job
-from fxt.data.paths import Lake, PartitionKey
+from fxt.data.paths import Lake, LakeKey
 from fxt.term import is_term
 from fxt.term.prompts import pick_fuzzy
 
@@ -70,7 +70,7 @@ def _jobs(names: tuple[str, ...]) -> list[DerivedJob]:
         raise click.UsageError(str(e.args[0])) from None
 
 
-def _norm_symbol(text: str, available: set[str], entries: list[PartitionKey]) -> str:
+def _norm_symbol(text: str, available: set[str], entries: list[LakeKey]) -> str:
     """ Any spelling -> the lake's symbol name, via refdata when possible. """
     squashed = "".join(ch for ch in text if ch.isalnum()).upper()
     if squashed in available:
@@ -89,7 +89,7 @@ def _pick_many(message: str, options: list[str]) -> list[str]:
 
 
 def select(job: DerivedJob, lake: Lake, symbols: tuple[str, ...], years, auto: bool
-           ) -> list[tuple[PartitionKey, Path]]:
+           ) -> list[tuple[LakeKey, Path]]:
     """ The job's input files, filtered by -i / -y (prompting for missing ones). """
     entries = job.scan(lake)
     if not entries:
@@ -205,7 +205,10 @@ def status(app: AppContext, jobs, symbols, years, auto) -> None:
 @click.argument("job")
 @click.pass_obj
 def pick(app: AppContext, job: str) -> None:
-    """ Browse/select a job's input files in the Textual picker. """
+    """ Browse/select a job's input files in the Textual picker.
+    
+        You must include a job name! 
+    """
     from .picker import LakePicker            # textual only loads for this command
     try:
         j = get_job(job)

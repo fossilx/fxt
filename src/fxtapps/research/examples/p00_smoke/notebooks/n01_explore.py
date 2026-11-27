@@ -32,4 +32,17 @@ PROJECT.key, paths.root
 paths.ensure()
 scratch = paths.data.dir("scratch")
 (scratch / "hello.txt").write_text("hello from n01_explore\n")
-sorted(p.name for p in scratch.iterdir()), paths.data.lake.root, paths.common.dir("features")
+sorted(p.name for p in scratch.iterdir())
+
+# %% [markdown]
+# Partitioned dirs build exact paths with `path()`/`file()` and find files with
+# `scan()`. The group's `features` dir uses `FeatureKey` (the lake layout with a
+# leading config level).
+
+# %%
+from fxt.data.paths import LakeKey
+from fxt.research.paths import FeatureKey
+
+features = paths.common.partitioned("features")
+lake_key = LakeKey(source="dukascopy", market="forex", symbol="EURJPY", interval="1HOUR", year=2020)
+features.file(FeatureKey.for_lake("abc123", lake_key)), features.scan(symbol="EURJPY")

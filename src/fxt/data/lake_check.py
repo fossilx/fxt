@@ -41,7 +41,7 @@ from typing import Literal
 from fxt.core.versioned import TYPE_KEY
 from fxt.data.derived.jobs import State, job_for_interval
 from fxt.data.models import RawMeta, get_meta_io, get_store
-from fxt.data.paths import Lake, LakeType, PartitionKey
+from fxt.data.paths import Lake, LakeKey
 from fxt.data.refdata import LakeRequirement, required_datasets
 
 __all__ = ["FindingStatus", "Finding", "check_lake", "expected_years", "compress_years"]
@@ -165,7 +165,7 @@ def check_lake(
             continue
         progress(f"{symbol}")
         raw_files: dict[str, dict[int, Path]] = {}
-        for key, path in lake.scan(LakeType.RAW, source=source, market=market, symbol=symbol):
+        for key, path in lake.raw.scan(source=source, market=market, symbol=symbol):
             raw_files.setdefault(key.interval, {})[key.year] = path
         raw_years = {iv: set(ys) for iv, ys in raw_files.items()}
 
@@ -204,10 +204,9 @@ def check_lake(
                 continue
             in_interval = job.inputs.filters.get("interval")
             for y in exp:
-                key = PartitionKey(source=source, market=market, symbol=symbol,
+                key = LakeKey(source=source, market=market, symbol=symbol,
                                    interval=in_interval or interval, year=y)
-                src = lake._partition_path(job.inputs.laketype, **key.model_dump(),
-                                           filename=key.filename, must_exist=False)
+                src = lake.layer(job.inputs.laketype).file(key)
                 if not src.exists():
                     finding(y, "blocked", f"input {in_interval} {y} missing")
                     continue

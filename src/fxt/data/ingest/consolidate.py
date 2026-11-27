@@ -140,7 +140,7 @@ class Thresholds:
 #!--------------------------------------------------------------------------------(80)
 def raw_paths(lake_dir: Path, key: DatasetKey, year: int) -> tuple[Path, Path]:
     """ (data file, consolidated manifest) for a raw year. """
-    folder = Lake(root=lake_dir).raw(source=key.source, market=key.market, symbol=key.symbol,
+    folder = Lake(root=lake_dir).raw.path(source=key.source, market=key.market, symbol=key.symbol,
                                      interval=key.interval, year=year, must_exist=False)
     return folder / f"{key.symbol}-{year}.parquet", folder / CONSOLIDATED_MANIFEST_NAME
 

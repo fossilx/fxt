@@ -26,7 +26,7 @@ from typing import Any
 from collections.abc import Callable
 
 from fxt.core.checks import CheckResult
-from fxt.data.paths import PartitionKey
+from fxt.data.paths import LakeKey
 
 
 #!================================================================================(80)
@@ -44,7 +44,7 @@ def _noop_report(name: str, result: CheckResult) -> None: ...
 #!--------------------------------------------------------------------------------(80)
 @dataclass
 class JobContext:
-    key:    PartitionKey                  # partition of the selected (source) file
+    key:    LakeKey                  # partition of the selected (source) file
     src:    Path                          # input file
     dst:    Path | None = None            # output file, if the job writes one
     log:    LogFn = _noop_log

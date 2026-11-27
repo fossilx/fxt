@@ -33,14 +33,18 @@ Declarations:
 
     # fxtapps/research/<group>/common/__init__.py
     GROUP = group_from_module(__name__, data_dirs={
-        "features": DataDir("shared feature tables, keyed by config hash"),
+        "features": DataDir("shared feature tables", key=FeatureKey),   # partitioned
     })
 
     # fxtapps/research/<group>/<project>/__init__.py
     from ..common import GROUP
     PROJECT = project_from_module(__name__, group=GROUP, data_dirs={
-        "scratch": DataDir("notebook scratch; nothing depends on it"),
+        "scratch": DataDir("notebook scratch; nothing depends on it"),   # free-form
     })
+
+    scope.dir("scratch")          -> Path            (any declared dir)
+    scope.partitioned("features") -> PartitionedDir  (declared with a key)
+    scope.lake                    -> Lake            (main lake layout)
 
 NOTE: placement only. The tracking schema, run manifests and the lockbox get
 their own formal definitions later.
@@ -57,14 +61,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
+from typing import ClassVar
 
-from fxt.data.paths import Lake
+from fxt.core.io.partitioned import PartitionedDir, PartitionKey
+from fxt.data.paths import Lake, LakeKey
 
 __all__ = [
     "APPS_PACKAGE",
     "SLUG_RE",
     "DataDir",
     "DataScope",
+    "FeatureKey",
     "Group",
     "Project",
     "ProjectPaths",
@@ -124,9 +131,14 @@ def _check_slug(kind: str, value: str, reserved: frozenset[str]) -> None:
 #!--------------------------------------------------------------------------------(80)
 @dataclass(frozen=True, slots=True)
 class DataDir:
-    """ A custom data dir a scope declares. Only a description for now; layout
-        rules (e.g. config-hash partitions) can be added here later. """
+    """ A custom data dir a scope declares. With `key`, the dir is laid out by
+        that PartitionKey (`scope.partitioned(name)`); without one it's free-form. """
     description: str = ""
+    key: type[PartitionKey] | None = None
+
+    def __post_init__(self) -> None:
+        if self.key is not None and not (isinstance(self.key, type) and issubclass(self.key, PartitionKey)):
+            raise TypeError(f"DataDir key must be a PartitionKey subclass, got {self.key!r}")
 
 
 def _freeze_dirs(kind: str, dirs: Mapping[str, DataDir] | None) -> Mapping[str, DataDir]:
@@ -136,6 +148,36 @@ def _freeze_dirs(kind: str, dirs: Mapping[str, DataDir] | None) -> Mapping[str, 
         if not isinstance(d, DataDir):
             raise TypeError(f"data dir {name!r} must be a DataDir, got {type(d).__name__}")
     return MappingProxyType(dirs)
+
+
+#!================================================================================(80)
+#! common partition keys
+#!--------------------------------------------------------------------------------(80)
+class FeatureKey(PartitionKey):
+    """ Lake layout with a leading config level, for parameterised datasets
+        (features, events, labels, ...): config/source/market/symbol/interval/year.
+        `config` is the config hash of whatever built the file. """
+    FILE_GLOB: ClassVar[str] = "*.parquet"
+
+    config:   str
+    source:   str
+    market:   str
+    symbol:   str
+    interval: str
+    year:     int
+
+    @property
+    def filename(self) -> str:
+        return f"{self.symbol}-{self.year}.parquet"
+
+    @classmethod
+    def for_lake(cls, config: str, key: LakeKey) -> FeatureKey:
+        """ The feature file built from one lake file under one config. """
+        return cls(config=config, **key.model_dump())
+
+    def lake_key(self) -> LakeKey:
+        """ The lake partition this feature file lines up with. """
+        return LakeKey(**self.model_dump(exclude={"config"}))
 
 
 #!================================================================================(80)
@@ -247,16 +289,27 @@ class DataScope:
 
     @property
     def lake(self) -> Lake:
-        """ Lake rooted in this scope: lake.derived(source=..., ...) etc. """
+        """ Lake rooted in this scope: lake.derived.path(source=..., ...) etc. """
         return Lake(root=self.data / LAKE_DIR)
+
+    def _declared(self, name: str) -> DataDir:
+        if name not in self.declared:
+            known = ", ".join(sorted(self.declared)) or "(none)"
+            raise KeyError(f"{self.label}: data dir {name!r} isn't declared (declared: {known})")
+        return self.declared[name]
 
     def dir(self, name: str) -> Path:
         """ A declared custom data dir. Undeclared names are an error, so every
             dir a scope uses is listed in its __init__.py. """
-        if name not in self.declared:
-            known = ", ".join(sorted(self.declared)) or "(none)"
-            raise KeyError(f"{self.label}: data dir {name!r} isn't declared (declared: {known})")
+        self._declared(name)
         return self.data / name
+
+    def partitioned(self, name: str) -> PartitionedDir:
+        """ A declared dir that has a partition key. """
+        key = self._declared(name).key
+        if key is None:
+            raise TypeError(f"{self.label}: data dir {name!r} was declared without a key")
+        return PartitionedDir(self.data / name, key)
 
     def ensure(self) -> DataScope:
         """ Create data/, data/lake/ and every declared dir (idempotent). """

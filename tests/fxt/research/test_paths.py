@@ -39,8 +39,8 @@ def test_scopes_have_the_same_shape(tmp_path: Path):
 
 def test_scope_lake_uses_main_lake_layout(tmp_path: Path):
     lake = PROJECT.paths(tmp_path).data.lake
-    path = lake.derived(source="dukascopy", market="forex", symbol="EURJPY",
-                        interval="1HOUR", year=2020, must_exist=False)
+    path = lake.derived.path(source="dukascopy", market="forex", symbol="EURJPY",
+                             interval="1HOUR", year=2020, must_exist=False)
     assert path.relative_to(lake.root) == Path(
         "derived/source=dukascopy/market=forex/symbol=EURJPY/interval=1HOUR/year=2020")
 
@@ -106,3 +106,39 @@ def test_from_module():
 def test_bad_run_ids(tmp_path: Path, run_id: str):
     with pytest.raises(ValueError):
         PROJECT.paths(tmp_path).run_dir(run_id)
+
+
+#! ---- partitioned declared dirs -----------------------------------------------
+from fxt.data.paths import LakeKey  # noqa: E402
+from fxt.research.paths import FeatureKey  # noqa: E402
+
+KEYED = Group("examples", {"features": DataDir("f", key=FeatureKey), "notes": DataDir()})
+
+
+def test_partitioned_declared_dir(tmp_path: Path):
+    scope = KEYED.common(tmp_path)
+    features = scope.partitioned("features")
+    assert features.root == scope.dir("features")
+    lk = LakeKey(source="dukascopy", market="forex", symbol="EURJPY", interval="1HOUR", year=2020)
+    fk = FeatureKey.for_lake("abc123", lk)
+    f = features.file(fk)
+    assert f.relative_to(features.root) == Path(
+        "config=abc123/source=dukascopy/market=forex/symbol=EURJPY/interval=1HOUR/year=2020/EURJPY-2020.parquet")
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"")
+    assert features.scan(symbol="EURJPY") == [(fk, f)]
+    assert features.scan(config="other") == []
+    assert fk.lake_key() == lk
+
+
+def test_partitioned_needs_a_key(tmp_path: Path):
+    scope = KEYED.common(tmp_path)
+    with pytest.raises(TypeError, match="without a key"):
+        scope.partitioned("notes")
+    with pytest.raises(KeyError):
+        scope.partitioned("nope")
+
+
+def test_datadir_key_must_be_a_partition_key():
+    with pytest.raises(TypeError):
+        DataDir("x", key=dict)

@@ -14,12 +14,12 @@ runs/examples/common/data/ (its `lake/` always exists and needs no declaring).
 """
 from __future__ import annotations
 
-from fxt.research.paths import DataDir, group_from_module
+from fxt.research.paths import DataDir, FeatureKey, group_from_module
 
 __all__ = ["GROUP", "banner"]
 
 GROUP = group_from_module(__name__, data_dirs={
-    "features": DataDir("feature tables shared by the group's projects, keyed by config hash"),
+    "features": DataDir("feature tables shared by the group's projects", key=FeatureKey),
 })
 
 

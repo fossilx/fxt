@@ -30,7 +30,7 @@ from typing import Literal
 
 import duckdb
 
-from fxt.data.paths import PartitionKey
+from fxt.data.paths import LakeKey
 from fxt.core.checks import Check, CheckResult, Status
 from fxt.data.derived.bars import TICK_TIME_COL, TIME_COL, get_interval
 from fxt.data.jobs import JobContext
@@ -79,8 +79,8 @@ def _path(ctx: JobContext, target: Target) -> Path:
         raise FileNotFoundError(f"{target} missing: {p}")
     return p
 
-def _key(path: Path) -> PartitionKey:
-    return PartitionKey.from_path(path)
+def _key(path: Path) -> LakeKey:
+    return LakeKey.from_path(path)
 
 def _is_ticks(path: Path) -> bool:
     return _key(path).interval == "TICK"
