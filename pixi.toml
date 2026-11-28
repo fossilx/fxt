@@ -11,7 +11,8 @@ default = { features = ["apps"], solve-group = "main" }
 lib = { features = [], solve-group = "main"} #doesn't have apps deps
 #this is so you can run pytest in the "lib" env and it will error out if it
 #detects you using one of the cli libs
-jupyter = { features = ["apps", "jupyter"], solve-group = "main"}
+notebook = { features = ["apps", "notebook"], solve-group = "main" }
+
 
 
 [activation]
@@ -43,6 +44,7 @@ rapidfuzz = ">=3.14.6,<4"
 fxt = { path = ".", editable = true }
 dukascopy-python = ">=7.0.0, <8"
 getch = ">=1.0, <2"
+#marimo = ">=0.26.0, <0.27"
 
 
 
@@ -99,7 +101,7 @@ research = "python -m fxtapps.research"
 #======================================================================(70)
 # group: jupyter
 #----------------------------------------------------------------------(70)
-[feature.jupyter.dependencies]
+[feature.notebook.dependencies]
 #traitlets = "*"
 jupyterlab = ">=4.6.6,<5"
 #pixi-kernel = ">=0.7.1,<0.8"
@@ -111,13 +113,26 @@ plotly = ">=7.1.0,<8"
 bokeh = ">=3.10.0,<4"
 pygal = ">=3.1.3,<4"
 jupyter_bokeh = ">=4.1.0,<5"
+sqlglot = ">=30.35.0,<31"
+python-lsp-server = ">=1.7.0,<2"
+websockets = ">=17.4,<18"
+vegafusion = ">=1.6.9,<2"
+vl-convert-python = ">=2.0.0rc7,<3"
 
-[feature.jupyter.pypi-dependencies]
+[feature.notebook.pypi-dependencies]
 jupyterlab-execute-time = ">=3.3.0, <4"
 jupytext = ">=1.17, <2"   # notebooks are versioned as percent-format .py
+marimo = ">=0.26.0, <0.27"
 
-[feature.jupyter.tasks]
+[feature.notebook.tasks]
 lab = "python jupyter/.jupyter/launcher.py"
+mar = "marimo edit --host 0.0.0.0"
+
+#======================================================================(70)
+# group: marimo
+#----------------------------------------------------------------------(70)
+
+
 
 # jupyterlab pixi-kernel nbformat ipykernel ipywidgets
 
